@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบทดสอบก่อนเรียน Boya Chinese 2 บทที่ 1</title>
+    <style>
+        body {
+            font-family: 'Tahoma', 'Saraban', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #0056b3; /* สีน้ำเงินเข้ม */
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        /* ส่วนกรอกข้อมูล */
+        #userInfo {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .form-group input[type="text"] {
+            width: 95%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        /* ส่วนแบบทดสอบ */
+        #quizContainer {
+            display: none; /* ซ่อนไว้ก่อน */
+        }
+
+        #quizForm .question-block {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        #quizForm .question-block p {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        #quizForm .options label {
+            display: block;
+            background-color: #f9f9f9;
+            padding: 12px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #quizForm .options label:hover {
+            background-color: #f0f0f0;
+        }
+
+        #quizForm .options input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        /* ส่วนผลลัพธ์ */
+        #resultsContainer {
+            display: none; /* ซ่อนไว้ก่อน */
+            text-align: center;
+        }
+
+        #resultsContainer h2 {
+            color: #0056b3;
+        }
+
+        #scoreDisplay {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #d9534f;
+            margin: 10px 0;
+        }
+
+        #scoreDisplay.passed {
+            color: #5cb85c; /* สีเขียวถ้าคะแนนดี */
+        }
+
+        .answer-key {
+            text-align: left;
+            margin-top: 30px;
+        }
+        
+        .answer-key .result-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .answer-key .correct {
+            background-color: #dff0d8; /* เขียวอ่อน */
+            border: 1px solid #5cb85c;
+        }
+        .answer-key .incorrect {
+            background-color: #f2dede; /* แดงอ่อน */
+            border: 1px solid #d9534f;
+        }
+        .answer-key strong {
+            color: #0056b3;
+        }
+
+        /* ปุ่ม */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+            background-color: #007bff; /* สีน้ำเงิน */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <h1>แบบทดสอบก่อนเรียน</h1>
+            <p>วิชาภาษาจีน - Boya Chinese 2 (上) บทที่ 1</p>
+        </header>
+
+        <div class="content">
+
+            <div id="userInfo">
+                <h2>กรุณากรอกข้อมูล</h2>
+                <form id="infoForm">
+                    <div class="form-group">
+                        <label for="firstName">ชื่อ:</label>
+                        <input type="text" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">นามสกุล:</label>
+                        <input type="text" id="lastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="className">ชั้น:</label>
+                        <input type="text" id="className" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="studentNumber">เลขที่:</label>
+                        <input type="text" id="studentNumber" required>
+                    </div>
+                    <button type="submit" class="btn">เริ่มทำแบบทดสอบ</button>
+                </form>
+            </div>
+
+            <div id="quizContainer">
+                <h2 id="welcomeMessage"></h2>
+                <form id="quizForm">
+                    <div class="question-block">
+                        <p>1. ในวันเปิดเรียนวันแรก นักเรียนใหม่ต้องไปที่สำนักงานเพื่อ 'รายงานตัว' หรือ 'ลงทะเบียน' คำภาษาจีนที่ถูกต้องคืออะไร</p>
+                        <div class="options">
+                            <label><input type="radio" name="q1" value="a"> 报道 (bàodào)</label>
+                            <label><input type="radio" name="q1" value="b"> 报告 (bàogào)</label>
+                            <label><input type="radio" name="q1" value="c"> 通知 (tōngzhī)</label>
+                            <label><input type="radio" name="q1" value="d"> 申请 (shēnqǐng)</label>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <p>2. คำว่า 'หอพักนักเรียน' ในภาษาจีนคือข้อใด</p>
+                        <div class="options">
+                            <label><input type="radio" name="q2" value="a"> 食堂 (shítáng)</label>
+                            <label><input type="radio" name="q2" value="b"> 教室 (jiàoshì)</label>
+                            <label><input type="radio" name="q2" value="c"> 宿舍 (sùshè)</label>
+                            <label><input type="radio" name="q2" value="d"> 公寓 (gōngyù)</label>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <p>3. เมื่อย้ายไปอยู่ในสภาพแวดล้อมใหม่ คุณต้อง 'ปรับตัว' คำกริยา 'ปรับตัว' คือข้อใด</p>
+                        <div class="options">
+                            <label><input type="radio" name="q3" value="a"> 适应 (shìyìng)</label>
+                            <label><input type="radio" name="q3" value="b"> 熟悉 (shúxī)</label>
+                            <label><input type="radio" name="q3" value="c"> 紧张 (jǐnzhāng)</label>
+                            <label><input type="radio" name="q3" value="d"> 改变 (gǎibiàn)</label>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <p>4. ข้อใดใช้โครงสร้างไวยากรณ์ 'A 对 B (的) 印象 (yìnxiàng)...' (A มีความประทับใจต่อ B...) ได้ถูกต้อง</p>
+                        <div class="options">
+                            <label><input type="radio" name="q4" value="a"> 他对我印象很好。</label>
+                            <label><input type="radio" name="q4" value="b"> 我对他的印象是他很好。</label>
+                            <label><input type="radio" name="q4" value="c"> 我的印象很好对他。</label>
+                            <label><input type="radio" name="q4" value="d"> 他给我的印象很好。</label>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <p>5. คำว่า '热情' (rèqíng) มักใช้อธิบายลักษณะนิสัยแบบใด</p>
+                        <div class="options">
+                            <label><input type="radio" name="q5" value="a"> เงียบขรึม ไม่ค่อยพูด</label>
+                            <label><input type="radio" name="q5" value="b"> กระตือรือร้น เป็นมิตร อัธยาศัยดี</label>
+                            <label><input type="radio" name="q5" value="c"> ประหม่า ตื่นเต้น</label>
+                            <label><input type="radio" name="q5" value="d"> ขี้อาย ไม่กล้าแสดงออก</label>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <p>6. A: 你怎么才来？ B: ______ 你不知道今天堵车吗？ ช่องว่างควรเติมคำใดเพื่อแสดงความประหลาดใจ</p>
+                        <div class="options">
+                            <label><input type="radio" name="q6" value="a"> 难道 (nándào)</label>
+                            <label><input type="radio" name="q6" value="b"> 到底 (dàodǐ)</label>
+                            <label><input type="radio" name="q6" value="c"> 竟然 (jìngrán)</label>
+                            <label><input type="radio" name="q6" value="d"> 反正 (fǎnzhèng)</label>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <p>7. คำว่า '交流' (jiāoliú) หมายถึงอะไร</p>
+                        <div class="options">
+                            <label><input type="radio" name="q7" value="a"> ทะเลาะวิวาท</label>
+                            <label><input type="radio" name="q7" value="b"> จราจร</label>
+                            <label><input type="radio" name="q7" value="c"> สื่อสาร แลกเปลี่ยน (ความคิดเห็น)</label>
+                            <label><input type="radio" name="q7" value="d"> จ่ายเงิน</label>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <p>8. ถ้าคุณต้องการถามเพื่อนว่า 'ตกลงเธอกินอะไรกันแน่' (หลังจากลังเลมานาน) ควรใช้คำว่าอะไร</p>
+                        <div class="options">
+                            <label><input type="radio" name="q8" value="a"> 你到底吃什么？</label>
+                            <label><input type="radio" name="q8" value="b"> 你难道吃什么？</label>
+                            <label><input type="radio" name="q8" value="c"> 你当然吃什么？</label>
+                            <label><input type="radio" name="q8" value="d"> 你果然吃什么？</label>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <p>9. ข้อใดใช้ 'บทเสริมบอกผลลัพธ์' (Resultative Complement) ได้ถูกต้อง</p>
+                        <div class="options">
+                            <label><input type="radio" name="q9" value="a"> 我看那本书了。</label>
+                            <label><input type="radio" name="q9" value="b"> 我看见那本书了。</label>
+                            <label><input type="radio" name="q9" value="c"> 我在看那本书。</label>
+                            <label><input type="radio" name="q9" value="d"> 我看过那本书。</label>
+                        </div>
+                    </div>
+
+                    <div class="question-block">
+                        <p>10. ถ้าคุณยังไม่ 'คุ้นเคย' กับสถานที่ใหม่ ควรพูดว่าอย่างไร</p>
+                        <div class="options">
+                            <label><input type="radio" name="q10" value="a"> 我对这里还不太熟悉。</label>
+                            <label><input type="radio" name="q10" value="b"> 我对这里还不太适应。</label>
+                            <label><input type="radio" name="q10" value="c"> 我对这里还不太热情。</label>
+                            <label><input type="radio" name="q10" value="d"> 我对这里还不太紧张。</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">ส่งคำตอบ</button>
+                </form>
+            </div>
+
+            <div id="resultsContainer">
+                <h2>ผลการทดสอบของคุณ</h2>
+                <p id="resultName"></p>
+                <p>คุณได้คะแนน</p>
+                <div id="scoreDisplay">0/10</div>
+                <div id="answerKey" class="answer-key">
+                    <h3>เฉลย</h3>
+                    </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ข้อมูลนักเรียนที่กรอก
+        let studentData = {};
+
+        // เฉลยที่ถูกต้อง (a=0, b=1, c=2, d=3)
+        const correctAnswers = {
+            q1: 'a',
+            q2: 'c',
+            q3: 'a',
+            q4: 'a',
+            q5: 'b',
+            q6: 'a',
+            q7: 'c',
+            q8: 'a',
+            q9: 'b',
+            q10: 'a'
+        };
+
+        // ข้อมูลคำถามและตัวเลือก (สำหรับแสดงเฉลย)
+        const questionsData = [
+            { q: "1. 'รายงานตัว' หรือ 'ลงทะเบียน' คืออะไร", a: "报道 (bàodào)" },
+            { q: "2. 'หอพักนักเรียน' คือข้อใด", a: "宿舍 (sùshè)" },
+            { q: "3. 'ปรับตัว' คือข้อใด", a: "适应 (shìyìng)" },
+            { q: "4. โครงสร้าง 'A 对 B (的) 印象...' ที่ถูกต้อง", a: "他对我印象很好。" },
+            { q: "5. '热情' (rèqíng) อธิบายลักษณะใด", a: "กระตือรือร้น เป็นมิตร อัธยาศัยดี" },
+            { q: "6. คำแสดงความประหลาดใจ (...เธอไม่รู้เหรอ)", a: "难道 (nándào)" },
+            { q: "7. '交流' (jiāoliú) หมายถึงอะไร", a: "สื่อสาร แลกเปลี่ยน (ความคิดเห็น)" },
+            { q: "8. 'ตกลง...กันแน่' (คาดคั้น)", a: "你到底吃什么？" },
+            { q: "9. 'บทเสริมบอกผลลัพธ์' ที่ถูกต้อง", a: "我看见那本书了。" },
+            { q: "10. 'ยังไม่คุ้นเคย' ควรพูดว่า", a: "我对这里还不太熟悉。" }
+        ];
+
+        // เลือก Element ที่สำคัญ
+        const userInfoDiv = document.getElementById('userInfo');
+        const quizContainerDiv = document.getElementById('quizContainer');
+        const resultsContainerDiv = document.getElementById('resultsContainer');
+
+        const infoForm = document.getElementById('infoForm');
+        const quizForm = document.getElementById('quizForm');
+        
+        // 1. เมื่อกรอกข้อมูลเสร็จ
+        infoForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // ป้องกันหน้าโหลดใหม่
+            
+            // เก็บข้อมูล
+            studentData.firstName = document.getElementById('firstName').value;
+            studentData.lastName = document.getElementById('lastName').value;
+            studentData.className = document.getElementById('className').value;
+            studentData.studentNumber = document.getElementById('studentNumber').value;
+
+            // แสดงชื่อต้อนรับ
+            document.getElementById('welcomeMessage').textContent = `โชคดีครับ, ${studentData.firstName}!`;
+
+            // ซ่อนฟอร์มข้อมูล แล้วแสดงแบบทดสอบ
+            userInfoDiv.style.display = 'none';
+            quizContainerDiv.style.display = 'block';
+        });
+
+        // 2. เมื่อส่งแบบทดสอบ
+        quizForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // ป้องกันหน้าโหลดใหม่
+
+            let score = 0;
+            const userAnswers = {};
+            
+            // วนลูปตรวจคำตอบ
+            for (let i = 1; i <= 10; i++) {
+                const questionName = 'q' + i;
+                const selectedOption = document.querySelector(`input[name="${questionName}"]:checked`);
+                
+                if (selectedOption) {
+                    userAnswers[questionName] = selectedOption.value;
+                    if (selectedOption.value === correctAnswers[questionName]) {
+                        score++;
+                    }
+                } else {
+                    userAnswers[questionName] = null; // ไม่ได้ตอบ
+                }
+            }
+            
+            // แสดงผลลัพธ์
+            showResults(score, userAnswers);
+        });
+
+        // 3. ฟังก์ชันแสดงผลลัพธ์
+        function showResults(score, userAnswers) {
+            // ซ่อนแบบทดสอบ แสดงผลลัพธ์
+            quizContainerDiv.style.display = 'none';
+            resultsContainerDiv.style.display = 'block';
+
+            // แสดงข้อมูลผู้สอบ
+            document.getElementById('resultName').textContent = 
+                `ผู้สอบ: ${studentData.firstName} ${studentData.lastName} (ชั้น: ${studentData.className} เลขที่: ${studentData.studentNumber})`;
+            
+            // แสดงคะแนน
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            scoreDisplay.textContent = `${score}/10`;
+            if (score >= 5) {
+                scoreDisplay.classList.add('passed');
+            }
+
+            // สร้างเฉลย
+            const answerKeyDiv = document.getElementById('answerKey');
+            answerKeyDiv.innerHTML = '<h3>เฉลย</h3>'; // เคลียร์ของเก่า
+
+            for(let i = 0; i < questionsData.length; i++) {
+                const qNum = 'q' + (i + 1);
+                const userAnswer = userAnswers[qNum];
+                const correctAnswer = correctAnswers[qNum];
+                const questionText = questionsData[i].q;
+                const correctAnswerText = questionsData[i].a;
+                
+                const resultItem = document.createElement('div');
+                resultItem.classList.add('result-item');
+                
+                let answerText = "";
+                // หาข้อความที่ผู้ใช้เลือก
+                if (userAnswer) {
+                    const selectedLabel = document.querySelector(`input[name="${qNum}"][value="${userAnswer}"]`).parentElement;
+                    answerText = selectedLabel.textContent.trim();
+                } else {
+                    answerText = "ไม่ได้ตอบ";
+                }
+
+                if (userAnswer === correctAnswer) {
+                    // ถ้าตอบถูก
+                    resultItem.classList.add('correct');
+                    resultItem.innerHTML = `<p>${questionText}</p>
+                                            <p><strong>คำตอบของคุณ:</strong> ${answerText} (ถูกต้อง)</p>`;
+                } else {
+                    // ถ้าตอบผิด
+                    resultItem.classList.add('incorrect');
+                    resultItem.innerHTML = `<p>${questionText}</p>
+                                            <p><strong>คำตอบของคุณ:</strong> ${answerText}</p>
+                                            <p><strong>เฉลย:</strong> ${correctAnswerText}</p>`;
+                }
+                
+                answerKeyDiv.appendChild(resultItem);
+            }
+        }
+    </script>
+
+</body>
+</html>
