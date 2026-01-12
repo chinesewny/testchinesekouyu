@@ -3,466 +3,634 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แบบทดสอบก่อนเรียน Boya Chinese 2 บทที่ 1</title>
+    <title>ระบบสอบอ่านภาษาจีน - ChineseClass By Krukong</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
     <style>
-        body {
-            font-family: 'Tahoma', 'Saraban', sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
-            line-height: 1.6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@400;700&display=swap');
+        
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background-color: #f3f4f6; 
         }
-
-        .container {
-            width: 100%;
-            max-width: 700px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
+        .chinese-font { 
+            font-family: 'Noto Sans SC', sans-serif; 
         }
-
-        .header {
-            background-color: #0056b3; /* สีน้ำเงินเข้ม */
-            color: white;
-            padding: 20px 30px;
-            text-align: center;
+        .fade-in { 
+            animation: fadeIn 0.5s ease-in-out; 
         }
-
-        .header h1 {
-            margin: 0;
-            font-size: 1.8em;
-        }
-
-        .header p {
-            margin: 5px 0 0;
-            font-size: 1.1em;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        /* ส่วนกรอกข้อมูล */
-        #userInfo {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-            font-size: 1.1em;
-        }
-
-        .form-group input[type="text"] {
-            width: 95%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1em;
-        }
-
-        /* ส่วนแบบทดสอบ */
-        #quizContainer {
-            display: none; /* ซ่อนไว้ก่อน */
-        }
-
-        #quizForm .question-block {
-            margin-bottom: 25px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 20px;
-        }
-
-        #quizForm .question-block p {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
-        #quizForm .options label {
-            display: block;
-            background-color: #f9f9f9;
-            padding: 12px 15px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        #quizForm .options label:hover {
-            background-color: #f0f0f0;
-        }
-
-        #quizForm .options input[type="radio"] {
-            margin-right: 10px;
-        }
-
-        /* ส่วนผลลัพธ์ */
-        #resultsContainer {
-            display: none; /* ซ่อนไว้ก่อน */
-            text-align: center;
-        }
-
-        #resultsContainer h2 {
-            color: #0056b3;
-        }
-
-        #scoreDisplay {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #d9534f;
-            margin: 10px 0;
-        }
-
-        #scoreDisplay.passed {
-            color: #5cb85c; /* สีเขียวถ้าคะแนนดี */
-        }
-
-        .answer-key {
-            text-align: left;
-            margin-top: 30px;
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
         }
         
-        .answer-key .result-item {
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-        }
-        .answer-key .correct {
-            background-color: #dff0d8; /* เขียวอ่อน */
-            border: 1px solid #5cb85c;
-        }
-        .answer-key .incorrect {
-            background-color: #f2dede; /* แดงอ่อน */
-            border: 1px solid #d9534f;
-        }
-        .answer-key strong {
-            color: #0056b3;
-        }
-
-        /* ปุ่ม */
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            font-size: 1.2em;
-            font-weight: bold;
-            color: white;
-            background-color: #007bff; /* สีน้ำเงิน */
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn:hover {
-            background-color: #0056b3;
-        }
+        /* Custom Utilities for Icons sizes */
+        .icon-sm { font-size: 14px; }
+        .icon-md { font-size: 20px; }
+        .icon-lg { font-size: 24px; }
+        .icon-xl { font-size: 48px; }
     </style>
 </head>
 <body>
+    <div id="root"></div>
 
-    <div class="container">
-        <header class="header">
-            <h1>แบบทดสอบก่อนเรียน</h1>
-            <p>วิชาภาษาจีน - Boya Chinese 2 (上) บทที่ 1</p>
-        </header>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
 
-        <div class="content">
+        // --- ตั้งค่า Google Apps Script URL ---
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwcJVlj83Zat_Ew5EZ7A_0eaKUICk3L3p6qqvyNXuz85yrpURIy6yn4hm3xoc6dozKQ/exec"; 
 
-            <div id="userInfo">
-                <h2>กรุณากรอกข้อมูล</h2>
-                <form id="infoForm">
-                    <div class="form-group">
-                        <label for="firstName">ชื่อ:</label>
-                        <input type="text" id="firstName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="lastName">นามสกุล:</label>
-                        <input type="text" id="lastName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="className">ชั้น:</label>
-                        <input type="text" id="className" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="studentNumber">เลขที่:</label>
-                        <input type="text" id="studentNumber" required>
-                    </div>
-                    <button type="submit" class="btn">เริ่มทำแบบทดสอบ</button>
-                </form>
-            </div>
+        // --- Components ---
 
-            <div id="quizContainer">
-                <h2 id="welcomeMessage"></h2>
-                <form id="quizForm">
-                    <div class="question-block">
-                        <p>1. ในวันเปิดเรียนวันแรก นักเรียนใหม่ต้องไปที่สำนักงานเพื่อ 'รายงานตัว' หรือ 'ลงทะเบียน' คำภาษาจีนที่ถูกต้องคืออะไร</p>
-                        <div class="options">
-                            <label><input type="radio" name="q1" value="a"> 报道 (bàodào)</label>
-                            <label><input type="radio" name="q1" value="b"> 报告 (bàogào)</label>
-                            <label><input type="radio" name="q1" value="c"> 通知 (tōngzhī)</label>
-                            <label><input type="radio" name="q1" value="d"> 申请 (shēnqǐng)</label>
+        const AlertModal = ({ message, onClose }) => {
+            if (!message) return null;
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+                    <div className="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4 transform transition-all scale-100">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold text-red-600 flex items-center">
+                                <span className="bg-red-100 p-1 rounded-full mr-2">
+                                    <i className="ph-fill ph-warning-circle text-red-600 icon-md"></i>
+                                </span>
+                                แจ้งเตือน
+                            </h3>
+                            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                                <i className="ph ph-x icon-lg"></i>
+                            </button>
                         </div>
+                        <p className="text-gray-700 mb-6 text-lg">{message}</p>
+                        <button 
+                            onClick={onClose} 
+                            className="w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-700 transition-colors shadow-md"
+                        >
+                            ตกลง
+                        </button>
                     </div>
-
-                    <div class="question-block">
-                        <p>2. คำว่า 'หอพักนักเรียน' ในภาษาจีนคือข้อใด</p>
-                        <div class="options">
-                            <label><input type="radio" name="q2" value="a"> 食堂 (shítáng)</label>
-                            <label><input type="radio" name="q2" value="b"> 教室 (jiàoshì)</label>
-                            <label><input type="radio" name="q2" value="c"> 宿舍 (sùshè)</label>
-                            <label><input type="radio" name="q2" value="d"> 公寓 (gōngyù)</label>
-                        </div>
-                    </div>
-
-                    <div class="question-block">
-                        <p>3. เมื่อย้ายไปอยู่ในสภาพแวดล้อมใหม่ คุณต้อง 'ปรับตัว' คำกริยา 'ปรับตัว' คือข้อใด</p>
-                        <div class="options">
-                            <label><input type="radio" name="q3" value="a"> 适应 (shìyìng)</label>
-                            <label><input type="radio" name="q3" value="b"> 熟悉 (shúxī)</label>
-                            <label><input type="radio" name="q3" value="c"> 紧张 (jǐnzhāng)</label>
-                            <label><input type="radio" name="q3" value="d"> 改变 (gǎibiàn)</label>
-                        </div>
-                    </div>
-
-                    <div class="question-block">
-                        <p>4. ข้อใดใช้โครงสร้างไวยากรณ์ 'A 对 B (的) 印象 (yìnxiàng)...' (A มีความประทับใจต่อ B...) ได้ถูกต้อง</p>
-                        <div class="options">
-                            <label><input type="radio" name="q4" value="a"> 他对我印象很好。</label>
-                            <label><input type="radio" name="q4" value="b"> 我对他的印象是他很好。</label>
-                            <label><input type="radio" name="q4" value="c"> 我的印象很好对他。</label>
-                            <label><input type="radio" name="q4" value="d"> 他给我的印象很好。</label>
-                        </div>
-                    </div>
-
-                    <div class="question-block">
-                        <p>5. คำว่า '热情' (rèqíng) มักใช้อธิบายลักษณะนิสัยแบบใด</p>
-                        <div class="options">
-                            <label><input type="radio" name="q5" value="a"> เงียบขรึม ไม่ค่อยพูด</label>
-                            <label><input type="radio" name="q5" value="b"> กระตือรือร้น เป็นมิตร อัธยาศัยดี</label>
-                            <label><input type="radio" name="q5" value="c"> ประหม่า ตื่นเต้น</label>
-                            <label><input type="radio" name="q5" value="d"> ขี้อาย ไม่กล้าแสดงออก</label>
-                        </div>
-                    </div>
-
-                    <div class="question-block">
-                        <p>6. A: 你怎么才来？ B: ______ 你不知道今天堵车吗？ ช่องว่างควรเติมคำใดเพื่อแสดงความประหลาดใจ</p>
-                        <div class="options">
-                            <label><input type="radio" name="q6" value="a"> 难道 (nándào)</label>
-                            <label><input type="radio" name="q6" value="b"> 到底 (dàodǐ)</label>
-                            <label><input type="radio" name="q6" value="c"> 竟然 (jìngrán)</label>
-                            <label><input type="radio" name="q6" value="d"> 反正 (fǎnzhèng)</label>
-                        </div>
-                    </div>
-
-                    <div class="question-block">
-                        <p>7. คำว่า '交流' (jiāoliú) หมายถึงอะไร</p>
-                        <div class="options">
-                            <label><input type="radio" name="q7" value="a"> ทะเลาะวิวาท</label>
-                            <label><input type="radio" name="q7" value="b"> จราจร</label>
-                            <label><input type="radio" name="q7" value="c"> สื่อสาร แลกเปลี่ยน (ความคิดเห็น)</label>
-                            <label><input type="radio" name="q7" value="d"> จ่ายเงิน</label>
-                        </div>
-                    </div>
-
-                    <div class="question-block">
-                        <p>8. ถ้าคุณต้องการถามเพื่อนว่า 'ตกลงเธอกินอะไรกันแน่' (หลังจากลังเลมานาน) ควรใช้คำว่าอะไร</p>
-                        <div class="options">
-                            <label><input type="radio" name="q8" value="a"> 你到底吃什么？</label>
-                            <label><input type="radio" name="q8" value="b"> 你难道吃什么？</label>
-                            <label><input type="radio" name="q8" value="c"> 你当然吃什么？</label>
-                            <label><input type="radio" name="q8" value="d"> 你果然吃什么？</label>
-                        </div>
-                    </div>
-
-                    <div class="question-block">
-                        <p>9. ข้อใดใช้ 'บทเสริมบอกผลลัพธ์' (Resultative Complement) ได้ถูกต้อง</p>
-                        <div class="options">
-                            <label><input type="radio" name="q9" value="a"> 我看那本书了。</label>
-                            <label><input type="radio" name="q9" value="b"> 我看见那本书了。</label>
-                            <label><input type="radio" name="q9" value="c"> 我在看那本书。</label>
-                            <label><input type="radio" name="q9" value="d"> 我看过那本书。</label>
-                        </div>
-                    </div>
-
-                    <div class="question-block">
-                        <p>10. ถ้าคุณยังไม่ 'คุ้นเคย' กับสถานที่ใหม่ ควรพูดว่าอย่างไร</p>
-                        <div class="options">
-                            <label><input type="radio" name="q10" value="a"> 我对这里还不太熟悉。</label>
-                            <label><input type="radio" name="q10" value="b"> 我对这里还不太适应。</label>
-                            <label><input type="radio" name="q10" value="c"> 我对这里还不太热情。</label>
-                            <label><input type="radio" name="q10" value="d"> 我对这里还不太紧张。</label>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn">ส่งคำตอบ</button>
-                </form>
-            </div>
-
-            <div id="resultsContainer">
-                <h2>ผลการทดสอบของคุณ</h2>
-                <p id="resultName"></p>
-                <p>คุณได้คะแนน</p>
-                <div id="scoreDisplay">0/10</div>
-                <div id="answerKey" class="answer-key">
-                    <h3>เฉลย</h3>
-                    </div>
-            </div>
-
-        </div>
-    </div>
-
-    <script>
-        // ข้อมูลนักเรียนที่กรอก
-        let studentData = {};
-
-        // เฉลยที่ถูกต้อง (a=0, b=1, c=2, d=3)
-        const correctAnswers = {
-            q1: 'a',
-            q2: 'c',
-            q3: 'a',
-            q4: 'a',
-            q5: 'b',
-            q6: 'a',
-            q7: 'c',
-            q8: 'a',
-            q9: 'b',
-            q10: 'a'
+                </div>
+            );
         };
 
-        // ข้อมูลคำถามและตัวเลือก (สำหรับแสดงเฉลย)
-        const questionsData = [
-            { q: "1. 'รายงานตัว' หรือ 'ลงทะเบียน' คืออะไร", a: "报道 (bàodào)" },
-            { q: "2. 'หอพักนักเรียน' คือข้อใด", a: "宿舍 (sùshè)" },
-            { q: "3. 'ปรับตัว' คือข้อใด", a: "适应 (shìyìng)" },
-            { q: "4. โครงสร้าง 'A 对 B (的) 印象...' ที่ถูกต้อง", a: "他对我印象很好。" },
-            { q: "5. '热情' (rèqíng) อธิบายลักษณะใด", a: "กระตือรือร้น เป็นมิตร อัธยาศัยดี" },
-            { q: "6. คำแสดงความประหลาดใจ (...เธอไม่รู้เหรอ)", a: "难道 (nándào)" },
-            { q: "7. '交流' (jiāoliú) หมายถึงอะไร", a: "สื่อสาร แลกเปลี่ยน (ความคิดเห็น)" },
-            { q: "8. 'ตกลง...กันแน่' (คาดคั้น)", a: "你到底吃什么？" },
-            { q: "9. 'บทเสริมบอกผลลัพธ์' ที่ถูกต้อง", a: "我看见那本书了。" },
-            { q: "10. 'ยังไม่คุ้นเคย' ควรพูดว่า", a: "我对这里还不太熟悉。" }
-        ];
+        const Header = () => (
+            <div className="bg-white shadow-md p-4 mb-6 rounded-xl flex flex-col items-center justify-center text-center border-b-4 border-red-500 relative overflow-hidden">
+                <img 
+                    src="https://img2.pic.in.th/pic/Logoc404dc85753b800c.png" 
+                    alt="School Logo" 
+                    className="h-28 mb-2 object-contain hover:scale-105 transition-transform duration-300 drop-shadow-sm" 
+                />
+                <h1 className="text-2xl md:text-3xl font-bold text-red-800 tracking-wide">ChineseClass By Krukong</h1>
+                <p className="text-gray-600">ระบบสุ่มประโยคสอบการอ่านรายบุคคล</p>
+            </div>
+        );
 
-        // เลือก Element ที่สำคัญ
-        const userInfoDiv = document.getElementById('userInfo');
-        const quizContainerDiv = document.getElementById('quizContainer');
-        const resultsContainerDiv = document.getElementById('resultsContainer');
+        const Footer = () => (
+            <div className="mt-12 text-center text-sm text-gray-500 pb-4 border-t pt-4">
+                พัฒนาระบบโดย ครูกีรติ ประสพพรรังสี - กลุ่มสาระการเรียนรู้ภาษาต่างประเทศ
+            </div>
+        );
 
-        const infoForm = document.getElementById('infoForm');
-        const quizForm = document.getElementById('quizForm');
-        
-        // 1. เมื่อกรอกข้อมูลเสร็จ
-        infoForm.addEventListener('submit', function(event) {
-            event.preventDefault(); // ป้องกันหน้าโหลดใหม่
+        const LoadingScreen = () => (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-indigo-50 text-indigo-800">
+                <i className="ph ph-spinner ph-spin text-5xl mb-4"></i>
+                <p className="text-xl font-medium">กำลังเชื่อมต่อฐานข้อมูล...</p>
+                <p className="text-sm text-indigo-400 mt-2">กรุณารอสักครู่</p>
+            </div>
+        );
+
+        const App = () => {
+            const [step, setStep] = useState('loading'); // loading, login, select, exam, finish, teacher
+            const [studentId, setStudentId] = useState('');
+            const [studentName, setStudentName] = useState('');
+            const [selectedSubject, setSelectedSubject] = useState('');
+            const [randomPool, setRandomPool] = useState([]);
+            const [selectedSentences, setSelectedSentences] = useState([]);
+            const [score, setScore] = useState(0);
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [alertMessage, setAlertMessage] = useState(null);
             
-            // เก็บข้อมูล
-            studentData.firstName = document.getElementById('firstName').value;
-            studentData.lastName = document.getElementById('lastName').value;
-            studentData.className = document.getElementById('className').value;
-            studentData.studentNumber = document.getElementById('studentNumber').value;
-
-            // แสดงชื่อต้อนรับ
-            document.getElementById('welcomeMessage').textContent = `โชคดีครับ, ${studentData.firstName}!`;
-
-            // ซ่อนฟอร์มข้อมูล แล้วแสดงแบบทดสอบ
-            userInfoDiv.style.display = 'none';
-            quizContainerDiv.style.display = 'block';
-        });
-
-        // 2. เมื่อส่งแบบทดสอบ
-        quizForm.addEventListener('submit', function(event) {
-            event.preventDefault(); // ป้องกันหน้าโหลดใหม่
-
-            let score = 0;
-            const userAnswers = {};
+            // Database State (Loaded from API)
+            const [dbStudents, setDbStudents] = useState({});
+            const [dbSentences, setDbSentences] = useState({});
             
-            // วนลูปตรวจคำตอบ
-            for (let i = 1; i <= 10; i++) {
-                const questionName = 'q' + i;
-                const selectedOption = document.querySelector(`input[name="${questionName}"]:checked`);
-                
-                if (selectedOption) {
-                    userAnswers[questionName] = selectedOption.value;
-                    if (selectedOption.value === correctAnswers[questionName]) {
-                        score++;
+            // State สำหรับเก็บผลการสอบทั้งหมด (ใช้ localStorage เพื่อความคงทน)
+            const [allResults, setAllResults] = useState(() => {
+                const saved = localStorage.getItem('chineseExamResults');
+                return saved ? JSON.parse(saved) : {};
+            });
+
+            const inputRef = useRef(null);
+
+            // Fetch Data on Load
+            useEffect(() => {
+                const fetchData = async () => {
+                    try {
+                        const [studentsRes, sentencesRes, subjectsRes] = await Promise.all([
+                            fetch(`${GOOGLE_SCRIPT_URL}?action=getStudents`).then(res => res.json()),
+                            fetch(`${GOOGLE_SCRIPT_URL}?action=getSentences`).then(res => res.json()),
+                            fetch(`${GOOGLE_SCRIPT_URL}?action=getSubjects`).then(res => res.json())
+                        ]);
+
+                        // Map subjects to sentences for readable names
+                        const subjectMap = {};
+                        if (Array.isArray(subjectsRes)) {
+                            subjectsRes.forEach(subj => {
+                                subjectMap[subj.code] = subj;
+                            });
+                        }
+
+                        // Update Sentences DB with proper names
+                        const enhancedSentences = { ...sentencesRes };
+                        Object.keys(enhancedSentences).forEach(key => {
+                            if (subjectMap[key]) {
+                                enhancedSentences[key].name = subjectMap[key].name; // Use readable name
+                            }
+                        });
+
+                        setDbStudents(studentsRes);
+                        setDbSentences(enhancedSentences);
+                        setStep('login');
+
+                    } catch (error) {
+                        console.error("Error loading data:", error);
+                        setAlertMessage("ไม่สามารถโหลดข้อมูลจาก Server ได้ กรุณาตรวจสอบอินเทอร์เน็ต");
                     }
-                } else {
-                    userAnswers[questionName] = null; // ไม่ได้ตอบ
+                };
+
+                fetchData();
+            }, []);
+
+            // Update localStorage whenever results change
+            useEffect(() => {
+                localStorage.setItem('chineseExamResults', JSON.stringify(allResults));
+            }, [allResults]);
+
+            // Auto focus input
+            useEffect(() => {
+                if (step === 'login' && inputRef.current) {
+                    inputRef.current.focus();
                 }
-            }
-            
-            // แสดงผลลัพธ์
-            showResults(score, userAnswers);
-        });
+            }, [step]);
 
-        // 3. ฟังก์ชันแสดงผลลัพธ์
-        function showResults(score, userAnswers) {
-            // ซ่อนแบบทดสอบ แสดงผลลัพธ์
-            quizContainerDiv.style.display = 'none';
-            resultsContainerDiv.style.display = 'block';
+            const showAlert = (msg) => setAlertMessage(msg);
+            const closeAlert = () => setAlertMessage(null);
 
-            // แสดงข้อมูลผู้สอบ
-            document.getElementById('resultName').textContent = 
-                `ผู้สอบ: ${studentData.firstName} ${studentData.lastName} (ชั้น: ${studentData.className} เลขที่: ${studentData.studentNumber})`;
-            
-            // แสดงคะแนน
-            const scoreDisplay = document.getElementById('scoreDisplay');
-            scoreDisplay.textContent = `${score}/10`;
-            if (score >= 5) {
-                scoreDisplay.classList.add('passed');
-            }
+            // Handle Barcode Scan Logic
+            const handleScan = (e) => {
+                if (e.key === 'Enter') {
+                    const id = studentId.trim();
+                    if (id !== '') {
+                        const studentData = dbStudents[id];
 
-            // สร้างเฉลย
-            const answerKeyDiv = document.getElementById('answerKey');
-            answerKeyDiv.innerHTML = '<h3>เฉลย</h3>'; // เคลียร์ของเก่า
-
-            for(let i = 0; i < questionsData.length; i++) {
-                const qNum = 'q' + (i + 1);
-                const userAnswer = userAnswers[qNum];
-                const correctAnswer = correctAnswers[qNum];
-                const questionText = questionsData[i].q;
-                const correctAnswerText = questionsData[i].a;
-                
-                const resultItem = document.createElement('div');
-                resultItem.classList.add('result-item');
-                
-                let answerText = "";
-                // หาข้อความที่ผู้ใช้เลือก
-                if (userAnswer) {
-                    const selectedLabel = document.querySelector(`input[name="${qNum}"][value="${userAnswer}"]`).parentElement;
-                    answerText = selectedLabel.textContent.trim();
-                } else {
-                    answerText = "ไม่ได้ตอบ";
+                        if (studentData) {
+                            const subjectKey = studentData.subject;
+                            
+                            if (dbSentences[subjectKey]) {
+                                setStudentName(studentData.name);
+                                setSelectedSubject(subjectKey);
+                                generateSentences(subjectKey);
+                            } else {
+                                showAlert(`พบข้อมูลนักเรียน แต่ไม่พบรายวิชา ${subjectKey} ในระบบข้อสอบ`);
+                            }
+                        } else {
+                            showAlert("ไม่พบรหัสนักเรียนนี้ในระบบ หรือยังไม่ได้ลงทะเบียนรายวิชา");
+                            setStudentId('');
+                        }
+                    } else {
+                        showAlert("กรุณาสแกนรหัสหรือกรอกรหัสนักเรียน");
+                    }
                 }
+            };
 
-                if (userAnswer === correctAnswer) {
-                    // ถ้าตอบถูก
-                    resultItem.classList.add('correct');
-                    resultItem.innerHTML = `<p>${questionText}</p>
-                                            <p><strong>คำตอบของคุณ:</strong> ${answerText} (ถูกต้อง)</p>`;
-                } else {
-                    // ถ้าตอบผิด
-                    resultItem.classList.add('incorrect');
-                    resultItem.innerHTML = `<p>${questionText}</p>
-                                            <p><strong>คำตอบของคุณ:</strong> ${answerText}</p>
-                                            <p><strong>เฉลย:</strong> ${correctAnswerText}</p>`;
+            const generateSentences = (subjectKey) => {
+                const subjectData = dbSentences[subjectKey];
+                if (!subjectData) return;
+
+                const allSentences = [...subjectData.sentences];
+                for (let i = allSentences.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [allSentences[i], allSentences[j]] = [allSentences[j], allSentences[i]];
                 }
                 
-                answerKeyDiv.appendChild(resultItem);
+                setRandomPool(allSentences.slice(0, 10)); // สุ่มมา 10 ประโยคเพื่อให้เลือก
+                setStep('select');
+            };
+
+            const toggleSentence = (sentence) => {
+                if (selectedSentences.includes(sentence)) {
+                    setSelectedSentences(selectedSentences.filter(s => s !== sentence));
+                } else {
+                    if (selectedSentences.length < 5) {
+                        setSelectedSentences([...selectedSentences, sentence]);
+                    } else {
+                        showAlert("เลือกได้สูงสุด 5 ประโยคเท่านั้น");
+                    }
+                }
+            };
+
+            const saveData = async () => {
+                setIsSubmitting(true);
+                const timestamp = new Date().toLocaleString('th-TH');
+                
+                // ข้อมูลนักเรียนปัจจุบัน
+                const currentStudent = dbStudents[studentId];
+
+                const dataPayload = {
+                    studentId: studentId,
+                    studentName: studentName,
+                    subject: selectedSubject, // ส่งรหัสวิชา
+                    room: currentStudent.room,
+                    no: currentStudent.no,
+                    selectedSentences: selectedSentences.join(" || "),
+                    score: score
+                };
+
+                // 1. Save to Local State (Dictionary by StudentID)
+                setAllResults(prev => ({
+                    ...prev,
+                    [studentId]: { score: score, timestamp: timestamp }
+                }));
+
+                console.log("Saving Data:", dataPayload);
+
+                // 2. Save to Google Sheet
+                try {
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors', 
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ใช้ text/plain เพื่อเลี่ยง preflight ใน GAS
+                        body: JSON.stringify(dataPayload)
+                    });
+                } catch (error) {
+                    console.error("Error saving to Google Sheets", error);
+                    showAlert("เกิดข้อผิดพลาดในการบันทึกออนไลน์ (แต่บันทึกในเครื่องแล้ว)");
+                }
+
+                setTimeout(() => {
+                    setStep('finish');
+                    setIsSubmitting(false);
+                }, 1000);
+            };
+
+            const resetSystem = () => {
+                setStudentId('');
+                setStudentName('');
+                setSelectedSubject('');
+                setRandomPool([]);
+                setSelectedSentences([]);
+                setScore(0);
+                setStep('login');
+            };
+
+            // --- Helper for Teacher Dashboard ---
+            const getUniqueRooms = () => {
+                const rooms = new Set();
+                Object.values(dbStudents).forEach(s => rooms.add(s.room));
+                return Array.from(rooms).sort();
+            };
+
+            // --- Teacher Dashboard Component ---
+            const TeacherDashboard = () => {
+                const [selectedRoom, setSelectedRoom] = useState('');
+                const rooms = getUniqueRooms();
+
+                const exportCSV = () => {
+                    if (!selectedRoom) return;
+
+                    const roomStudents = Object.entries(dbStudents)
+                        .filter(([_, data]) => data.room === selectedRoom)
+                        .sort((a, b) => parseInt(a[1].no) - parseInt(b[1].no)); // Sort by No properly
+
+                    let csvContent = "data:text/csv;charset=utf-8,";
+                    csvContent += "ลำดับที่,รหัสนักเรียน,ชื่อ-นามสกุล,คะแนนที่ได้\n";
+
+                    roomStudents.forEach(([id, data]) => {
+                        const result = allResults[id];
+                        const scoreStr = result ? result.score : "";
+                        const safeName = `"${data.name.replace(/"/g, '""')}"`;
+                        csvContent += `${data.no},${id},${safeName},${scoreStr}\n`;
+                    });
+
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `คะแนนสอบอ่าน_${selectedRoom}_${new Date().toISOString().slice(0,10)}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+
+                return (
+                    <div className="min-h-screen p-4 max-w-4xl mx-auto flex flex-col">
+                        <Header />
+                        <div className="bg-white p-6 rounded-xl shadow-lg fade-in">
+                            <div className="flex justify-between items-center mb-6 border-b pb-4">
+                                <h2 className="text-2xl font-bold text-gray-800 flex items-center">
+                                    <i className="ph ph-gear mr-2"></i> ระบบจัดการครูผู้สอน
+                                </h2>
+                                <button onClick={() => setStep('login')} className="text-gray-500 hover:text-red-500">
+                                    <i className="ph ph-x icon-lg"></i>
+                                </button>
+                            </div>
+
+                            <div className="mb-8">
+                                <label className="block text-gray-700 font-bold mb-2">เลือกห้องเรียนที่ต้องการส่งออกข้อมูล:</label>
+                                <div className="flex gap-4">
+                                    <select 
+                                        value={selectedRoom}
+                                        onChange={(e) => setSelectedRoom(e.target.value)}
+                                        className="flex-1 p-3 border rounded-lg text-lg bg-gray-50 focus:ring-2 focus:ring-blue-400 outline-none"
+                                    >
+                                        <option value="">-- กรุณาเลือกห้อง --</option>
+                                        {rooms.map(r => <option key={r} value={r}>{r}</option>)}
+                                    </select>
+                                    
+                                    <button 
+                                        onClick={exportCSV}
+                                        disabled={!selectedRoom}
+                                        className={`px-6 py-3 rounded-lg font-bold text-white flex items-center shadow-md transition-all ${selectedRoom ? 'bg-green-600 hover:bg-green-700 hover:-translate-y-1' : 'bg-gray-300 cursor-not-allowed'}`}
+                                    >
+                                        <i className="ph ph-download-simple mr-2"></i> Export CSV
+                                    </button>
+                                </div>
+                            </div>
+
+                            {selectedRoom && (
+                                <div className="overflow-x-auto">
+                                    <h3 className="font-bold text-gray-700 mb-3">ตัวอย่างข้อมูล ({selectedRoom})</h3>
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                                <th className="py-3 px-6 text-center">ลำดับที่</th>
+                                                <th className="py-3 px-6 text-center">รหัสนักเรียน</th>
+                                                <th className="py-3 px-6">ชื่อ-นามสกุล</th>
+                                                <th className="py-3 px-6 text-center">คะแนน</th>
+                                                <th className="py-3 px-6 text-center">สถานะ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-gray-600 text-sm font-light">
+                                            {Object.entries(dbStudents)
+                                                .filter(([_, data]) => data.room === selectedRoom)
+                                                .sort((a, b) => parseInt(a[1].no) - parseInt(b[1].no))
+                                                .map(([id, data]) => {
+                                                    const result = allResults[id];
+                                                    return (
+                                                        <tr key={id} className="border-b border-gray-200 hover:bg-gray-50">
+                                                            <td className="py-3 px-6 text-center font-bold">{data.no}</td>
+                                                            <td className="py-3 px-6 text-center">{id}</td>
+                                                            <td className="py-3 px-6">{data.name}</td>
+                                                            <td className="py-3 px-6 text-center text-lg font-bold text-blue-600">
+                                                                {result ? result.score : "-"}
+                                                            </td>
+                                                            <td className="py-3 px-6 text-center">
+                                                                {result ? (
+                                                                    <span className="bg-green-200 text-green-700 py-1 px-3 rounded-full text-xs">สอบแล้ว</span>
+                                                                ) : (
+                                                                    <span className="bg-gray-200 text-gray-500 py-1 px-3 rounded-full text-xs">ยังไม่สอบ</span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                        <Footer />
+                    </div>
+                );
+            };
+
+            // --- Render ---
+            if (step === 'loading') {
+                return <LoadingScreen />;
             }
-        }
+
+            return (
+                <div className="font-sans text-gray-900 bg-gray-50 min-h-screen">
+                    <AlertModal message={alertMessage} onClose={closeAlert} />
+                    
+                    {/* Step 1: Login */}
+                    {step === 'login' && (
+                        <div className="min-h-screen p-4 max-w-2xl mx-auto flex flex-col">
+                            <Header />
+                            <div className="flex-grow flex flex-col justify-center items-center bg-white p-8 rounded-xl shadow-lg fade-in relative overflow-hidden">
+                                
+                                {/* Teacher Mode Button */}
+                                <button 
+                                    onClick={() => setStep('teacher')}
+                                    className="absolute top-4 right-4 text-gray-300 hover:text-gray-600 transition-colors z-20 p-2"
+                                    title="สำหรับครู"
+                                >
+                                    <i className="ph ph-gear icon-md"></i>
+                                </button>
+
+                                <div className="bg-red-100 p-4 rounded-full mb-4 z-10 animate-bounce">
+                                    <i className="ph ph-scan text-red-600 icon-xl"></i>
+                                </div>
+                                <h2 className="text-xl font-bold mb-4 z-10">สแกนรหัสนักเรียน / Scan ID</h2>
+                                <input 
+                                    ref={inputRef}
+                                    type="text" 
+                                    value={studentId}
+                                    onChange={(e) => setStudentId(e.target.value)}
+                                    onKeyDown={handleScan}
+                                    placeholder="ยิงบาร์โค้ดที่นี่..."
+                                    className="w-full text-center text-2xl p-4 border-2 border-red-300 rounded-lg focus:outline-none focus:border-red-600 focus:ring-4 focus:ring-red-100 transition mb-4 z-10 placeholder-gray-300"
+                                />
+                                <div className="text-sm text-gray-500 mt-2 z-10 text-center">
+                                    <p>ระบบจะค้นหารายวิชาและชุดข้อสอบอัตโนมัติ</p>
+                                </div>
+                                
+                                {/* Decoration BG */}
+                                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-yellow-400 to-red-500"></div>
+                                <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-red-50 rounded-full z-0 opacity-50"></div>
+                                <div className="absolute -top-10 -left-10 w-32 h-32 bg-yellow-50 rounded-full z-0 opacity-50"></div>
+                            </div>
+                            <Footer />
+                        </div>
+                    )}
+
+                    {/* Step: Teacher Dashboard */}
+                    {step === 'teacher' && <TeacherDashboard />}
+
+                    {/* Step 2: Select Sentences */}
+                    {step === 'select' && (
+                        <div className="min-h-screen p-4 max-w-4xl mx-auto flex flex-col">
+                            <Header />
+                            <div className="bg-white p-6 rounded-xl shadow-lg fade-in border-t-4 border-yellow-400">
+                                <div className="flex flex-col md:flex-row justify-between items-center mb-6 border-b pb-4 gap-4 bg-gray-50 p-4 rounded-lg">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-red-800 flex items-center">
+                                            <i className="ph ph-user mr-2 text-red-500"></i> {studentName} 
+                                            <span className="ml-2 text-sm font-normal text-gray-500 bg-white px-2 py-1 rounded border">ID: {studentId}</span>
+                                        </h2>
+                                        <div className="flex gap-4 mt-1 text-sm text-gray-600">
+                                            <span className="flex items-center">
+                                                <i className="ph ph-book-open mr-1 icon-sm"></i> {dbSentences[selectedSubject]?.name || selectedSubject}
+                                            </span>
+                                            <span className="flex items-center">
+                                                <i className="ph ph-users mr-1 icon-sm"></i> ห้อง: {dbStudents[studentId].room} (เลขที่ {dbStudents[studentId].no})
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className={`font-bold px-4 py-2 rounded-full flex items-center shadow-sm transition-colors ${selectedSentences.length === 5 ? 'bg-green-100 text-green-700 ring-2 ring-green-400' : 'bg-yellow-100 text-yellow-700'}`}>
+                                        <i className="ph ph-check-square mr-2 icon-md"></i> เลือกแล้ว {selectedSentences.length} / 5
+                                    </div>
+                                </div>
+
+                                <p className="mb-4 text-gray-600 text-center font-medium">✨ กรุณาเลือกประโยคที่ต้องการสอบจำนวน 5 ประโยค ✨</p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+                                    {randomPool.map((sentence, index) => (
+                                        <div 
+                                            key={index}
+                                            onClick={() => toggleSentence(sentence)}
+                                            className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 flex items-center relative overflow-hidden ${selectedSentences.includes(sentence) ? 'border-red-500 bg-red-50 shadow-md transform scale-[1.01]' : 'border-gray-100 hover:border-red-200 hover:bg-gray-50 hover:shadow-sm'}`}
+                                        >
+                                            <div className={`w-6 h-6 rounded-full border-2 mr-4 flex items-center justify-center flex-shrink-0 transition-colors ${selectedSentences.includes(sentence) ? 'bg-red-500 border-red-500 text-white' : 'border-gray-300 bg-white'}`}>
+                                                {selectedSentences.includes(sentence) && <i className="ph-bold ph-check text-xs"></i>}
+                                            </div>
+                                            <span className="text-lg chinese-font text-gray-800">{sentence}</span>
+                                            {selectedSentences.includes(sentence) && <div className="absolute right-0 top-0 w-4 h-full bg-gradient-to-l from-red-100 to-transparent opacity-50"></div>}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="flex justify-between mt-4">
+                                    <button onClick={resetSystem} className="px-6 py-3 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors">
+                                        ยกเลิก / เปลี่ยนคน
+                                    </button>
+                                    <button 
+                                        disabled={selectedSentences.length !== 5}
+                                        onClick={() => setStep('exam')}
+                                        className={`px-10 py-3 rounded-xl font-bold text-white shadow-lg transition-all transform flex items-center ${selectedSentences.length === 5 ? 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 hover:scale-105 hover:shadow-xl' : 'bg-gray-300 cursor-not-allowed grayscale'}`}
+                                    >
+                                        ยืนยันและเริ่มสอบ <span className="ml-2">➜</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <Footer />
+                        </div>
+                    )}
+
+                    {/* Step 3: Exam & Grading */}
+                    {step === 'exam' && (
+                        <div className="min-h-screen p-4 max-w-4xl mx-auto flex flex-col">
+                            <Header />
+                            <div className="bg-white p-6 rounded-xl shadow-lg fade-in relative">
+                                {/* Header Section */}
+                                <div className="flex flex-col md:flex-row justify-between items-start mb-6 border-b pb-4">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-red-800 mb-1 flex items-center">
+                                            <i className="ph ph-file-text mr-2"></i> หน้าสอบอ่าน
+                                        </h2>
+                                        <p className="text-lg font-bold text-gray-800 flex items-center mt-2">
+                                            <i className="ph ph-user mr-2 text-gray-500 icon-md"></i> {studentName}
+                                        </p>
+                                        <p className="text-gray-500 ml-7 text-sm">{dbSentences[selectedSubject]?.name || selectedSubject}</p>
+                                    </div>
+                                    <div className="text-right mt-4 md:mt-0 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Date</div>
+                                        <div className="font-mono font-bold text-gray-700">{new Date().toLocaleDateString('th-TH')}</div>
+                                    </div>
+                                </div>
+
+                                {/* Sentences List */}
+                                <div className="space-y-4 mb-8">
+                                    {selectedSentences.map((sentence, index) => (
+                                        <div key={index} className="flex items-start bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                            <span className="bg-red-600 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0 shadow-sm text-sm">
+                                                {index + 1}
+                                            </span>
+                                            <p className="text-xl md:text-2xl chinese-font text-gray-800 leading-relaxed font-medium">
+                                                {sentence}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Scoring Section */}
+                                <div className="border-t-2 border-dashed border-gray-200 pt-6 bg-gray-50 p-6 rounded-xl -mx-2 md:mx-0">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center text-gray-700">
+                                        <i className="ph ph-check-square mr-2 text-green-600"></i> ส่วนสำหรับผู้ประเมิน (ให้คะแนน)
+                                    </h3>
+                                    
+                                    <div className="flex flex-wrap gap-3 mb-6 justify-center md:justify-start">
+                                        {[0, 1, 2, 3, 4, 5].map(s => (
+                                            <button 
+                                                key={s}
+                                                onClick={() => setScore(s)}
+                                                className={`w-14 h-14 rounded-xl font-bold text-2xl border-2 transition-all duration-200 shadow-sm ${score === s ? 'bg-red-600 border-red-600 text-white transform scale-110 ring-4 ring-red-100' : 'bg-white border-gray-200 text-gray-400 hover:border-red-400 hover:text-red-500'}`}
+                                            >
+                                                {s}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between text-sm text-gray-500 mb-6 px-1">
+                                        <span>คะแนน: {score} / 5</span>
+                                        <span>{score >= 3 ? <span className="text-green-600 font-bold">ผ่านเกณฑ์</span> : <span className="text-red-400">ควรปรับปรุง</span>}</span>
+                                    </div>
+
+                                    <button 
+                                        onClick={saveData}
+                                        disabled={isSubmitting}
+                                        className={`w-full text-white text-xl py-4 rounded-xl font-bold shadow-lg flex items-center justify-center transition-all ${isSubmitting ? 'bg-gray-400 cursor-wait' : 'bg-green-600 hover:bg-green-700 hover:shadow-green-200 hover:-translate-y-1'}`}
+                                    >
+                                        {isSubmitting ? (
+                                            <span className="flex items-center"><i className="ph ph-spinner animate-spin mr-2"></i> กำลังบันทึกข้อมูล...</span>
+                                        ) : (
+                                            <>
+                                                <i className="ph ph-floppy-disk mr-2"></i> บันทึกผลคะแนน
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                            <Footer />
+                        </div>
+                    )}
+
+                    {/* Step 4: Success */}
+                    {step === 'finish' && (
+                        <div className="min-h-screen p-4 flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
+                            <div className="bg-white p-10 rounded-2xl shadow-2xl text-center fade-in max-w-md w-full border-t-8 border-green-500 transform transition-all">
+                                <div className="mx-auto bg-green-100 w-24 h-24 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                                    <i className="ph-fill ph-check-circle text-green-600 text-6xl"></i>
+                                </div>
+                                <h2 className="text-3xl font-bold text-gray-800 mb-2">บันทึกเรียบร้อย!</h2>
+                                <div className="w-16 h-1 bg-green-200 mx-auto mb-4 rounded-full"></div>
+                                <p className="text-gray-600 mb-1">ผลสอบของ</p>
+                                <p className="text-xl font-bold text-green-700 mb-8 bg-green-50 py-2 rounded-lg">{studentName}</p>
+                                
+                                <button 
+                                    onClick={resetSystem}
+                                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+                                >
+                                    <i className="ph ph-arrow-counter-clockwise mr-2"></i> กลับไปหน้าแรก (คนถัดไป)
+                                </button>
+                            </div>
+                            <Footer />
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
-
 </body>
 </html>
