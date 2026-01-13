@@ -35,19 +35,13 @@
             from { opacity: 0; transform: translateY(10px); } 
             to { opacity: 1; transform: translateY(0); } 
         }
-        
-        /* Custom Utilities for Icons sizes */
-        .icon-sm { font-size: 14px; }
-        .icon-md { font-size: 20px; }
-        .icon-lg { font-size: 24px; }
-        .icon-xl { font-size: 48px; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
         // --- ตั้งค่า Google Apps Script URL ---
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwcJVlj83Zat_Ew5EZ7A_0eaKUICk3L3p6qqvyNXuz85yrpURIy6yn4hm3xoc6dozKQ/exec"; 
@@ -109,47 +103,51 @@
         );
 
         const App = () => {
-            const [step, setStep] = useState('loading'); // loading, login, select, exam, finish, teacher
+            const [step, setStep] = useState('loading'); // loading, login, check_result, select, exam, finish, teacher
             const [studentId, setStudentId] = useState('');
             const [studentName, setStudentName] = useState('');
             const [selectedSubject, setSelectedSubject] = useState('');
             const [randomPool, setRandomPool] = useState([]);
             const [selectedSentences, setSelectedSentences] = useState([]);
-            const [score, setScore] = useState(0);
+            
+            // Score State (เปลี่ยนเป็นเก็บคะแนนรายข้อ)
+            const [sentenceScores, setSentenceScores] = useState({0:0, 1:0, 2:0, 3:0, 4:0});
+            
             const [isSubmitting, setIsSubmitting] = useState(false);
             const [alertMessage, setAlertMessage] = useState(null);
-            
-            // เพิ่ม State สำหรับควบคุมการแสดงผลพินอิน (ตั้งค่าเริ่มต้นเป็น false = ปิด)
             const [showPinyin, setShowPinyin] = useState(false);
             
-            // Database State (Loaded from API)
+            // Database State
             const [dbStudents, setDbStudents] = useState({});
             const [dbSentences, setDbSentences] = useState({});
             
-            // State สำหรับเก็บผลการสอบทั้งหมด (ใช้ localStorage เพื่อความคงทน)
+            // Results State
             const [allResults, setAllResults] = useState(() => {
                 const saved = localStorage.getItem('chineseExamResults');
                 return saved ? JSON.parse(saved) : {};
             });
+            
+            // Previous result for Retake flow
+            const [previousResult, setPreviousResult] = useState(null);
 
             const inputRef = useRef(null);
+
+            // คำนวณคะแนนรวมอัตโนมัติ
+            const totalScore = useMemo(() => {
+                return Object.values(sentenceScores).reduce((acc, curr) => acc + curr, 0);
+            }, [sentenceScores]);
 
             // Fetch Data on Load
             useEffect(() => {
                 const fetchData = async () => {
                     try {
-                        // ดึงข้อมูล Students, Sentences, Subjects และ **Results (เพิ่ม)**
                         const [studentsRes, sentencesRes, subjectsRes, resultsRes] = await Promise.all([
                             fetch(`${GOOGLE_SCRIPT_URL}?action=getStudents`).then(res => res.json()),
                             fetch(`${GOOGLE_SCRIPT_URL}?action=getSentences`).then(res => res.json()),
                             fetch(`${GOOGLE_SCRIPT_URL}?action=getSubjects`).then(res => res.json()),
-                            // ดึงผลสอบย้อนหลัง (ถ้ามี API รองรับ) ถ้า error ให้ return []
-                            fetch(`${GOOGLE_SCRIPT_URL}?action=getResults`)
-                                .then(res => res.json())
-                                .catch(() => []) 
+                            fetch(`${GOOGLE_SCRIPT_URL}?action=getResults`).then(res => res.json()).catch(() => []) 
                         ]);
 
-                        // Map subjects to sentences for readable names
                         const subjectMap = {};
                         if (Array.isArray(subjectsRes)) {
                             subjectsRes.forEach(subj => {
@@ -157,19 +155,16 @@
                             });
                         }
 
-                        // Update Sentences DB with proper names
                         const enhancedSentences = { ...sentencesRes };
                         Object.keys(enhancedSentences).forEach(key => {
                             if (subjectMap[key]) {
-                                enhancedSentences[key].name = subjectMap[key].name; // Use readable name
+                                enhancedSentences[key].name = subjectMap[key].name;
                             }
                         });
                         
-                        // Process Historical Results from Server
                         const serverResults = {};
                         if (Array.isArray(resultsRes)) {
                             resultsRes.forEach(r => {
-                                // ใช้ studentId เป็น key ข้อมูลล่าสุดจะถูกทับลงไป (ซึ่งถูกต้องแล้วสำหรับแสดงคะแนนล่าสุด)
                                 if (r.studentId) {
                                     serverResults[r.studentId] = { 
                                         score: r.score, 
@@ -179,13 +174,7 @@
                             });
                         }
 
-                        // Merge Server Results with Local Results
-                        // ให้ความสำคัญกับ Server Data ก่อน เพื่อให้ข้อมูลตรงกันทุกเครื่อง
-                        setAllResults(prev => ({
-                            ...prev, 
-                            ...serverResults 
-                        }));
-
+                        setAllResults(prev => ({ ...prev, ...serverResults }));
                         setDbStudents(studentsRes);
                         setDbSentences(enhancedSentences);
                         setStep('login');
@@ -199,12 +188,10 @@
                 fetchData();
             }, []);
 
-            // Update localStorage whenever results change
             useEffect(() => {
                 localStorage.setItem('chineseExamResults', JSON.stringify(allResults));
             }, [allResults]);
 
-            // Auto focus input
             useEffect(() => {
                 if (step === 'login' && inputRef.current) {
                     inputRef.current.focus();
@@ -222,12 +209,21 @@
                         const studentData = dbStudents[id];
 
                         if (studentData) {
+                            setStudentName(studentData.name);
                             const subjectKey = studentData.subject;
-                            
+
                             if (dbSentences[subjectKey]) {
-                                setStudentName(studentData.name);
                                 setSelectedSubject(subjectKey);
-                                generateSentences(subjectKey);
+                                
+                                // ตรวจสอบว่าเคยสอบไปแล้วหรือยัง
+                                const prevRes = allResults[id];
+                                if (prevRes) {
+                                    setPreviousResult(prevRes);
+                                    setStep('check_result'); // ไปหน้าตรวจสอบผลสอบเก่าก่อน
+                                } else {
+                                    setPreviousResult(null);
+                                    generateSentences(subjectKey);
+                                }
                             } else {
                                 showAlert(`พบข้อมูลนักเรียน แต่ไม่พบรายวิชา ${subjectKey} ในระบบข้อสอบ`);
                             }
@@ -241,6 +237,11 @@
                 }
             };
 
+            const startExam = () => {
+                // เริ่มสอบ (กรณีสอบครั้งแรก หรือกดสอบแก้ตัว)
+                generateSentences(selectedSubject);
+            };
+
             const generateSentences = (subjectKey) => {
                 const subjectData = dbSentences[subjectKey];
                 if (!subjectData) return;
@@ -251,7 +252,7 @@
                     [allSentences[i], allSentences[j]] = [allSentences[j], allSentences[i]];
                 }
                 
-                setRandomPool(allSentences.slice(0, 10)); // สุ่มมา 10 ประโยคเพื่อให้เลือก
+                setRandomPool(allSentences.slice(0, 10));
                 setStep('select');
             };
 
@@ -266,38 +267,40 @@
                     }
                 }
             };
+            
+            // ฟังก์ชันอัปเดตคะแนนรายข้อ
+            const updateSentenceScore = (index, scoreValue) => {
+                setSentenceScores(prev => ({
+                    ...prev,
+                    [index]: scoreValue
+                }));
+            };
 
             const saveData = async () => {
                 setIsSubmitting(true);
                 const timestamp = new Date().toLocaleString('th-TH');
-                
-                // ข้อมูลนักเรียนปัจจุบัน
                 const currentStudent = dbStudents[studentId];
 
                 const dataPayload = {
                     studentId: studentId,
                     studentName: studentName,
-                    subject: selectedSubject, // ส่งรหัสวิชา
+                    subject: selectedSubject,
                     room: currentStudent.room,
                     no: currentStudent.no,
                     selectedSentences: selectedSentences.join(" || "),
-                    score: score
+                    score: totalScore // ใช้คะแนนรวมที่คำนวณจากรายข้อ
                 };
 
-                // 1. Save to Local State (Dictionary by StudentID)
                 setAllResults(prev => ({
                     ...prev,
-                    [studentId]: { score: score, timestamp: timestamp }
+                    [studentId]: { score: totalScore, timestamp: timestamp }
                 }));
 
-                console.log("Saving Data:", dataPayload);
-
-                // 2. Save to Google Sheet
                 try {
                     await fetch(GOOGLE_SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors', 
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // ใช้ text/plain เพื่อเลี่ยง preflight ใน GAS
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                         body: JSON.stringify(dataPayload)
                     });
                 } catch (error) {
@@ -317,22 +320,17 @@
                 setSelectedSubject('');
                 setRandomPool([]);
                 setSelectedSentences([]);
-                setScore(0);
+                setSentenceScores({0:0, 1:0, 2:0, 3:0, 4:0}); // รีเซ็ตคะแนนรายข้อ
+                setPreviousResult(null);
                 setStep('login');
-                setShowPinyin(false); // รีเซ็ตให้ปิดพินอินเสมอเมื่อเริ่มคนใหม่
+                setShowPinyin(false);
             };
 
-            // --- Improved Helper to display/hide Pinyin ---
             const renderSentence = (text) => {
-                // Regex เพื่อจับข้อความในวงเล็บ
                 const regex = /(\s*\([^)]*\))/g;
-
-                // 1. ถ้าสั่งปิดพินอิน -> ลบข้อความในวงเล็บออก
                 if (!showPinyin) {
                     return text.replace(regex, '');
                 }
-
-                // 2. ถ้าสั่งเปิดพินอิน -> ไฮไลท์สีข้อความในวงเล็บ เพื่อให้รู้ว่าระบบมองเห็น
                 const parts = text.split(regex);
                 return parts.map((part, i) => {
                     if (part.match(regex)) {
@@ -342,14 +340,12 @@
                 });
             };
 
-            // --- Helper for Teacher Dashboard ---
             const getUniqueRooms = () => {
                 const rooms = new Set();
                 Object.values(dbStudents).forEach(s => rooms.add(s.room));
                 return Array.from(rooms).sort();
             };
 
-            // --- Teacher Dashboard Component ---
             const TeacherDashboard = () => {
                 const [selectedRoom, setSelectedRoom] = useState('');
                 const rooms = getUniqueRooms();
@@ -359,7 +355,7 @@
 
                     const roomStudents = Object.entries(dbStudents)
                         .filter(([_, data]) => data.room === selectedRoom)
-                        .sort((a, b) => parseInt(a[1].no) - parseInt(b[1].no)); // Sort by No properly
+                        .sort((a, b) => parseInt(a[1].no) - parseInt(b[1].no));
 
                     let csvContent = "data:text/csv;charset=utf-8,";
                     csvContent += "ลำดับที่,รหัสนักเรียน,ชื่อ-นามสกุล,คะแนนที่ได้\n";
@@ -414,55 +410,12 @@
                                     </button>
                                 </div>
                             </div>
-
-                            {selectedRoom && (
-                                <div className="overflow-x-auto">
-                                    <h3 className="font-bold text-gray-700 mb-3">ตัวอย่างข้อมูล ({selectedRoom})</h3>
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                                                <th className="py-3 px-6 text-center">ลำดับที่</th>
-                                                <th className="py-3 px-6 text-center">รหัสนักเรียน</th>
-                                                <th className="py-3 px-6">ชื่อ-นามสกุล</th>
-                                                <th className="py-3 px-6 text-center">คะแนน</th>
-                                                <th className="py-3 px-6 text-center">สถานะ</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="text-gray-600 text-sm font-light">
-                                            {Object.entries(dbStudents)
-                                                .filter(([_, data]) => data.room === selectedRoom)
-                                                .sort((a, b) => parseInt(a[1].no) - parseInt(b[1].no))
-                                                .map(([id, data]) => {
-                                                    const result = allResults[id];
-                                                    return (
-                                                        <tr key={id} className="border-b border-gray-200 hover:bg-gray-50">
-                                                            <td className="py-3 px-6 text-center font-bold">{data.no}</td>
-                                                            <td className="py-3 px-6 text-center">{id}</td>
-                                                            <td className="py-3 px-6">{data.name}</td>
-                                                            <td className="py-3 px-6 text-center text-lg font-bold text-blue-600">
-                                                                {result ? result.score : "-"}
-                                                            </td>
-                                                            <td className="py-3 px-6 text-center">
-                                                                {result ? (
-                                                                    <span className="bg-green-200 text-green-700 py-1 px-3 rounded-full text-xs">สอบแล้ว</span>
-                                                                ) : (
-                                                                    <span className="bg-gray-200 text-gray-500 py-1 px-3 rounded-full text-xs">ยังไม่สอบ</span>
-                                                                )}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
                         </div>
                         <Footer />
                     </div>
                 );
             };
 
-            // --- Render ---
             if (step === 'loading') {
                 return <LoadingScreen />;
             }
@@ -476,8 +429,6 @@
                         <div className="min-h-screen p-4 max-w-2xl mx-auto flex flex-col">
                             <Header />
                             <div className="flex-grow flex flex-col justify-center items-center bg-white p-8 rounded-xl shadow-lg fade-in relative overflow-hidden">
-                                
-                                {/* Teacher Mode Button */}
                                 <button 
                                     onClick={() => setStep('teacher')}
                                     className="absolute top-4 right-4 text-gray-300 hover:text-gray-600 transition-colors z-20 p-2"
@@ -503,10 +454,66 @@
                                     <p>ระบบจะค้นหารายวิชาและชุดข้อสอบอัตโนมัติ</p>
                                 </div>
                                 
-                                {/* Decoration BG */}
                                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-yellow-400 to-red-500"></div>
                                 <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-red-50 rounded-full z-0 opacity-50"></div>
                                 <div className="absolute -top-10 -left-10 w-32 h-32 bg-yellow-50 rounded-full z-0 opacity-50"></div>
+                            </div>
+                            <Footer />
+                        </div>
+                    )}
+                    
+                    {/* Step: Check Result (New Step for Retake Logic) */}
+                    {step === 'check_result' && previousResult && (
+                        <div className="min-h-screen p-4 max-w-2xl mx-auto flex flex-col">
+                            <Header />
+                            <div className="flex-grow flex flex-col justify-center items-center bg-white p-8 rounded-xl shadow-lg fade-in border-t-4 border-blue-500">
+                                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                    <i className="ph ph-user text-4xl text-gray-600"></i>
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-1">{studentName}</h2>
+                                <p className="text-gray-500 mb-6">รหัสนักเรียน: {studentId}</p>
+                                
+                                <div className={`p-6 rounded-xl w-full text-center mb-6 ${previousResult.score < 6 ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                                    <p className="text-gray-600 mb-2">ผลการสอบล่าสุด</p>
+                                    <div className={`text-4xl font-bold mb-2 ${previousResult.score < 6 ? 'text-red-600' : 'text-green-600'}`}>
+                                        {previousResult.score} / 10
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        {previousResult.score < 6 ? 'ยังไม่ผ่านเกณฑ์ (น้อยกว่า 6)' : 'ผ่านเกณฑ์เรียบร้อย'}
+                                    </div>
+                                </div>
+                                
+                                <div className="w-full space-y-3">
+                                    {previousResult.score < 6 ? (
+                                        <button 
+                                            onClick={startExam}
+                                            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-bold text-lg shadow-md transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <i className="ph-bold ph-arrow-clockwise"></i> สอบแก้ตัวใหม่
+                                        </button>
+                                    ) : (
+                                        <div className="text-center p-2 text-gray-400 text-sm">
+                                            นักเรียนสอบผ่านแล้ว
+                                        </div>
+                                    )}
+                                    
+                                    <button 
+                                        onClick={resetSystem}
+                                        className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium transition-colors"
+                                    >
+                                        กลับไปหน้าหลัก
+                                    </button>
+                                    
+                                    {/* Override Button for Teachers (Optional) */}
+                                    {previousResult.score >= 6 && (
+                                        <button 
+                                            onClick={startExam}
+                                            className="w-full mt-2 text-gray-400 hover:text-red-500 text-xs py-2 underline"
+                                        >
+                                            (สำหรับครู) บังคับสอบใหม่
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                             <Footer />
                         </div>
@@ -612,56 +619,73 @@
                                     </button>
                                 </div>
 
-                                {/* Sentences List */}
+                                {/* Sentences List & Scoring */}
                                 <div className="space-y-4 mb-8">
                                     {selectedSentences.map((sentence, index) => (
-                                        <div key={index} className="flex items-start bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                                            <span className="bg-red-600 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0 shadow-sm text-sm">
-                                                {index + 1}
-                                            </span>
-                                            <p className="text-xl md:text-2xl chinese-font text-gray-800 leading-relaxed font-medium">
-                                                {renderSentence(sentence)}
-                                            </p>
+                                        <div key={index} className="flex flex-col md:flex-row items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow gap-4">
+                                            {/* Sentence Text */}
+                                            <div className="flex items-start flex-grow w-full">
+                                                <span className="bg-red-600 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center mr-4 flex-shrink-0 shadow-sm text-sm">
+                                                    {index + 1}
+                                                </span>
+                                                <p className="text-xl md:text-2xl chinese-font text-gray-800 leading-relaxed font-medium">
+                                                    {renderSentence(sentence)}
+                                                </p>
+                                            </div>
+
+                                            {/* Individual Scoring Controls */}
+                                            <div className="flex items-center gap-1 bg-gray-50 p-2 rounded-lg border border-gray-200 flex-shrink-0">
+                                                {[0, 1, 2].map(scoreVal => (
+                                                    <button
+                                                        key={scoreVal}
+                                                        onClick={() => updateSentenceScore(index, scoreVal)}
+                                                        className={`w-10 h-10 rounded-md font-bold text-lg transition-all ${sentenceScores[index] === scoreVal ? 
+                                                            (scoreVal === 2 ? 'bg-green-500 text-white shadow-md' : scoreVal === 1 ? 'bg-yellow-500 text-white shadow-md' : 'bg-red-500 text-white shadow-md') 
+                                                            : 'bg-white text-gray-400 border border-gray-200 hover:bg-gray-100'}`}
+                                                    >
+                                                        {scoreVal}
+                                                    </button>
+                                                ))}
+                                                <span className="ml-1 text-xs text-gray-400 font-medium">คะแนน</span>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* Scoring Section */}
-                                <div className="border-t-2 border-dashed border-gray-200 pt-6 bg-gray-50 p-6 rounded-xl -mx-2 md:mx-0">
-                                    <h3 className="text-lg font-bold mb-4 flex items-center text-gray-700">
-                                        <i className="ph ph-check-square mr-2 text-green-600"></i> ส่วนสำหรับผู้ประเมิน (ให้คะแนน)
-                                    </h3>
-                                    
-                                    <div className="flex flex-wrap gap-2 mb-6 justify-center md:justify-start">
-                                        {Array.from({length: 10}, (_, i) => i + 1).map(s => (
-                                            <button 
-                                                key={s}
-                                                onClick={() => setScore(s)}
-                                                className={`w-12 h-12 rounded-lg font-bold text-xl border-2 transition-all duration-200 shadow-sm ${score === s ? 'bg-red-600 border-red-600 text-white transform scale-110 ring-4 ring-red-100' : 'bg-white border-gray-200 text-gray-400 hover:border-red-400 hover:text-red-500'}`}
-                                            >
-                                                {s}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    
-                                    <div className="flex items-center justify-between text-sm text-gray-500 mb-6 px-1">
-                                        <span>คะแนน: {score} / 10</span>
-                                        <span>{score >= 6 ? <span className="text-green-600 font-bold">ผ่านเกณฑ์</span> : <span className="text-red-400">ควรปรับปรุง</span>}</span>
-                                    </div>
+                                {/* Total Scoring Section */}
+                                <div className="border-t-2 border-dashed border-gray-200 pt-6 bg-gray-50 p-6 rounded-xl -mx-2 md:mx-0 sticky bottom-0 shadow-inner">
+                                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                                        <div>
+                                            <h3 className="text-lg font-bold flex items-center text-gray-700">
+                                                <i className="ph ph-calculator mr-2 text-indigo-600"></i> สรุปคะแนนสอบ
+                                            </h3>
+                                            <p className="text-sm text-gray-500">ระบบคำนวณจากคะแนนรายข้อ (ข้อละ 2 คะแนน)</p>
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-6">
+                                            <div className="text-center">
+                                                <div className="text-4xl font-bold text-indigo-700">{totalScore}</div>
+                                                <div className="text-xs text-gray-500 uppercase">Total Score</div>
+                                            </div>
+                                            <div className={`px-4 py-2 rounded-lg font-bold text-lg ${totalScore >= 6 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                {totalScore >= 6 ? 'ผ่านเกณฑ์' : 'ควรปรับปรุง'}
+                                            </div>
+                                        </div>
 
-                                    <button 
-                                        onClick={saveData}
-                                        disabled={isSubmitting}
-                                        className={`w-full text-white text-xl py-4 rounded-xl font-bold shadow-lg flex items-center justify-center transition-all ${isSubmitting ? 'bg-gray-400 cursor-wait' : 'bg-green-600 hover:bg-green-700 hover:shadow-green-200 hover:-translate-y-1'}`}
-                                    >
-                                        {isSubmitting ? (
-                                            <span className="flex items-center"><i className="ph ph-spinner animate-spin mr-2"></i> กำลังบันทึกข้อมูล...</span>
-                                        ) : (
-                                            <>
-                                                <i className="ph ph-floppy-disk mr-2"></i> บันทึกผลคะแนน
-                                            </>
-                                        )}
-                                    </button>
+                                        <button 
+                                            onClick={saveData}
+                                            disabled={isSubmitting}
+                                            className={`w-full md:w-auto px-8 py-3 text-white text-lg rounded-xl font-bold shadow-lg flex items-center justify-center transition-all ${isSubmitting ? 'bg-gray-400 cursor-wait' : 'bg-green-600 hover:bg-green-700 hover:shadow-green-200 hover:-translate-y-1'}`}
+                                        >
+                                            {isSubmitting ? (
+                                                <span className="flex items-center"><i className="ph ph-spinner animate-spin mr-2"></i> กำลังบันทึก...</span>
+                                            ) : (
+                                                <>
+                                                    <i className="ph ph-floppy-disk mr-2"></i> บันทึกผล
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <Footer />
@@ -679,10 +703,13 @@
                                 <div className="w-16 h-1 bg-green-200 mx-auto mb-4 rounded-full"></div>
                                 <p className="text-gray-600 mb-1">ผลสอบของ</p>
                                 <p className="text-xl font-bold text-green-700 mb-8 bg-green-50 py-2 rounded-lg">{studentName}</p>
+                                <div className="mt-4 text-gray-500">
+                                    คะแนนที่ได้: <span className="font-bold text-gray-800">{totalScore} / 10</span>
+                                </div>
                                 
                                 <button 
                                     onClick={resetSystem}
-                                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+                                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 mt-8"
                                 >
                                     <i className="ph ph-arrow-counter-clockwise mr-2"></i> กลับไปหน้าแรก (คนถัดไป)
                                 </button>
