@@ -138,10 +138,15 @@
             useEffect(() => {
                 const fetchData = async () => {
                     try {
-                        const [studentsRes, sentencesRes, subjectsRes] = await Promise.all([
+                        // ดึงข้อมูล Students, Sentences, Subjects และ **Results (เพิ่ม)**
+                        const [studentsRes, sentencesRes, subjectsRes, resultsRes] = await Promise.all([
                             fetch(`${GOOGLE_SCRIPT_URL}?action=getStudents`).then(res => res.json()),
                             fetch(`${GOOGLE_SCRIPT_URL}?action=getSentences`).then(res => res.json()),
-                            fetch(`${GOOGLE_SCRIPT_URL}?action=getSubjects`).then(res => res.json())
+                            fetch(`${GOOGLE_SCRIPT_URL}?action=getSubjects`).then(res => res.json()),
+                            // ดึงผลสอบย้อนหลัง (ถ้ามี API รองรับ) ถ้า error ให้ return []
+                            fetch(`${GOOGLE_SCRIPT_URL}?action=getResults`)
+                                .then(res => res.json())
+                                .catch(() => []) 
                         ]);
 
                         // Map subjects to sentences for readable names
@@ -159,6 +164,27 @@
                                 enhancedSentences[key].name = subjectMap[key].name; // Use readable name
                             }
                         });
+                        
+                        // Process Historical Results from Server
+                        const serverResults = {};
+                        if (Array.isArray(resultsRes)) {
+                            resultsRes.forEach(r => {
+                                // ใช้ studentId เป็น key ข้อมูลล่าสุดจะถูกทับลงไป (ซึ่งถูกต้องแล้วสำหรับแสดงคะแนนล่าสุด)
+                                if (r.studentId) {
+                                    serverResults[r.studentId] = { 
+                                        score: r.score, 
+                                        timestamp: r.timestamp 
+                                    };
+                                }
+                            });
+                        }
+
+                        // Merge Server Results with Local Results
+                        // ให้ความสำคัญกับ Server Data ก่อน เพื่อให้ข้อมูลตรงกันทุกเครื่อง
+                        setAllResults(prev => ({
+                            ...prev, 
+                            ...serverResults 
+                        }));
 
                         setDbStudents(studentsRes);
                         setDbSentences(enhancedSentences);
